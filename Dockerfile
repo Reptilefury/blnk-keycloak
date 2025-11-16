@@ -3,10 +3,12 @@ FROM quay.io/keycloak/keycloak:23.0
 
 USER root
 
-# Download and add Cloud SQL Socket Factory for PostgreSQL
-RUN mkdir -p /opt/keycloak/lib/quarkus && \
+# Install curl and download Cloud SQL Socket Factory for PostgreSQL
+RUN apt-get update && apt-get install -y curl && \
+    mkdir -p /opt/keycloak/lib/quarkus && \
     curl -L -o /opt/keycloak/lib/quarkus/cloud-sql-postgres-socket-factory.jar \
-    https://repo1.maven.org/maven2/com/google/cloud/sql/cloud-sql-postgres-socket-factory/1.14.4/cloud-sql-postgres-socket-factory-1.14.4.jar
+    https://repo1.maven.org/maven2/com/google/cloud/sql/cloud-sql-postgres-socket-factory/1.14.4/cloud-sql-postgres-socket-factory-1.14.4.jar && \
+    apt-get remove -y curl && apt-get clean
 
 USER 1000
 
