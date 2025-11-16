@@ -51,7 +51,7 @@ jobs:
         with:
           context: .
           file: Dockerfile
-          platforms: linux/amd64,linux/arm64
+          platforms: linux/amd64
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
@@ -73,6 +73,26 @@ jobs:
       - name: Set up Cloud SDK
         if: github.event_name != 'pull_request'
         uses: google-github-actions/setup-gcloud@v2
+
+      - name: Wait for image to be available
+        if: github.event_name != 'pull_request'
+        run: |
+          MAX_RETRIES=30
+          RETRY_COUNT=0
+          IMAGE_URL="us-central1-docker.pkg.dev/heroic-equinox-474616-i5/keycloak-repo/keycloak:${{ github.sha }}"
+
+          while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+            if gcloud artifacts docker images describe "$IMAGE_URL" --project heroic-equinox-474616-i5 &>/dev/null; then
+              echo "✓ Image is available in Artifact Registry"
+              exit 0
+            fi
+            RETRY_COUNT=$((RETRY_COUNT + 1))
+            echo "⏳ Waiting for image... (attempt $RETRY_COUNT/$MAX_RETRIES)"
+            sleep 2
+          done
+
+          echo "✗ Image not available after $MAX_RETRIES attempts"
+          exit 1
 
       - name: Deploy to Cloud Run
         if: github.event_name != 'pull_request'
