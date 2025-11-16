@@ -1,8 +1,8 @@
 # Stage 1: Download Cloud SQL Socket Factory
 FROM registry.access.redhat.com/ubi9-minimal AS downloader
 
-# Install curl (minimal, works in all arches)
-RUN microdnf install -y curl && microdnf clean all
+# Install curl-minimal (required for the next step, minimal works in all arches)
+RUN microdnf install -y curl-minimal && microdnf clean all
 
 RUN mkdir -p /opt/keycloak/providers && \
     curl -L -o /opt/keycloak/providers/cloudsql-postgres-socket-factory-1.17.0.jar \
@@ -32,9 +32,9 @@ ENV KC_PROXY=edge \
     KEYCLOAK_ADMIN=admin \
     KEYCLOAK_ADMIN_PASSWORD=admin123
 
-# Install curl for healthcheck
+# Install curl-minimal for healthcheck
 USER root
-RUN microdnf install -y curl && microdnf clean all
+RUN microdnf install -y curl-minimal && microdnf clean all
 USER 1000
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=120s --retries=10 \
