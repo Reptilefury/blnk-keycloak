@@ -1,6 +1,15 @@
 # Keycloak image with HTTPS reverse proxy support and Cloud SQL integration
 FROM quay.io/keycloak/keycloak:23.0
 
+USER root
+
+# Download and add Cloud SQL Socket Factory for PostgreSQL
+RUN mkdir -p /opt/keycloak/lib/quarkus && \
+    curl -L -o /opt/keycloak/lib/quarkus/cloud-sql-postgres-socket-factory.jar \
+    https://repo1.maven.org/maven2/com/google/cloud/sql/cloud-sql-postgres-socket-factory/1.14.4/cloud-sql-postgres-socket-factory-1.14.4.jar
+
+USER 1000
+
 # Set environment variables for reverse proxy and database support
 ENV KC_PROXY=edge
 ENV KC_HTTP_ENABLED=true
