@@ -10,7 +10,6 @@ RUN mkdir -p /opt/keycloak/providers && \
 # Stage 2: Keycloak builder with optimizations
 FROM quay.io/keycloak/keycloak:23.0 AS builder
 
-# Build-time env for Postgres
 ENV KC_DB=postgres
 
 # Copy Cloud SQL Socket Factory
