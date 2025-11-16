@@ -1,9 +1,9 @@
 # Stage 1: Download Cloud SQL Socket Factory
 FROM registry.access.redhat.com/ubi9-minimal AS downloader
 # Define constants for file and checksum
-ENV JAR_NAME=cloudsql-postgres-socket-factory-1.17.0.jar \
-    JAR_URL=https://repo1.maven.org/maven2/com/google/cloud/cloudsql-postgres-socket-factory/1.17.0/cloudsql-postgres-socket-factory-1.17.0.jar \
-    SHA1_URL=https://repo1.maven.org/maven2/com/google/cloud/cloudsql-postgres-socket-factory/1.17.0/cloudsql-postgres-socket-factory-1.17.0.jar.sha1 \
+ENV JAR_NAME=postgres-socket-factory-1.27.0.jar \
+    JAR_URL=https://repo1.maven.org/maven2/com/google/cloud/sql/postgres-socket-factory/1.27.0/postgres-socket-factory-1.27.0.jar \
+    SHA1_URL=https://repo1.maven.org/maven2/com/google/cloud/sql/postgres-socket-factory/1.27.0/postgres-socket-factory-1.27.0.jar.sha1 \
     PROVIDER_DIR=/opt/keycloak/providers
 # Download the JAR and verify its integrity with SHA-1 checksum
 RUN set -e && \
