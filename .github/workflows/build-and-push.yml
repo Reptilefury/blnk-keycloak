@@ -64,6 +64,16 @@ jobs:
           echo "  Tags: ${{ steps.meta.outputs.tags }}"
           echo "  Image: us-central1-docker.pkg.dev/heroic-equinox-474616-i5/keycloak-repo/keycloak"
 
+      - name: Authenticate to Google Cloud
+        if: github.event_name != 'pull_request'
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up Cloud SDK
+        if: github.event_name != 'pull_request'
+        uses: google-github-actions/setup-gcloud@v2
+
       - name: Deploy to Cloud Run
         if: github.event_name != 'pull_request'
         uses: google-github-actions/deploy-cloudrun@v2
@@ -71,7 +81,7 @@ jobs:
           service: keycloak
           image: us-central1-docker.pkg.dev/heroic-equinox-474616-i5/keycloak-repo/keycloak:${{ github.sha }}
           region: us-central1
-          credentials_json: ${{ secrets.GCP_SA_KEY }}
+          project_id: heroic-equinox-474616-i5
           flags: |
             --allow-unauthenticated
             --memory=2Gi
