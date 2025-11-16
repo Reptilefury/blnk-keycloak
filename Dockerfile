@@ -3,6 +3,12 @@ FROM quay.io/keycloak/keycloak:23.0 AS builder
 
 # Set build-time env for Postgres
 ENV KC_DB=postgres
+ENV KC_PROXY=edge \
+    KC_HTTP_ENABLED=true \
+    KC_HOSTNAME_STRICT=false \
+    KC_HOSTNAME_STRICT_HTTPS=false \
+    KEYCLOAK_ADMIN=admin \
+    KEYCLOAK_ADMIN_PASSWORD=admin123
 
 # Add Cloud SQL Postgres Socket Factory JAR as a provider
 RUN mkdir -p /opt/keycloak/providers
@@ -20,5 +26,11 @@ COPY --from=builder /opt/keycloak/ /opt/keycloak/
 # Set runtime user
 USER 1000
 
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=120s --retries=3 \
+    CMD curl -f http://localhost:8080/health/ready || exit 1
+    
 # Entry point for optimized start
 ENTRYPOINT ["/opt/keycloak/bin/kc.sh"]
+
+CMD ["start"]
