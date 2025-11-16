@@ -28,9 +28,15 @@ RUN set -e && \
     else \
         echo "SUCCESS: JAR file integrity verified." ; \
     fi
-# -----------------------------------------------------------------------------
-# Stage 2: Builder
-# -----------------------------------------------------------------------------
+
+# Stage 2: Build ubi-micro with curl for overlay in final image
+FROM registry.access.redhat.com/ubi9:9.4 AS ubi-micro-build
+RUN mkdir -p /mnt/rootfs
+# Install minimal curl (libcurl-minimal to reduce size), allowing erasure if needed
+RUN dnf install --installroot /mnt/rootfs --releasever 9 --setopt install_weak_deps=false --nodocs -y --allowerasing curl-minimal libcurl-minimal ca-certificates && \
+    dnf clean all --installroot /mnt/rootfs
+
+# Stage 3: Builder
 FROM quay.io/keycloak/keycloak:23.0 AS builder
 ENV KC_DB=postgres
 ENV PROVIDER_DIR=/opt/keycloak/providers
@@ -44,10 +50,11 @@ RUN chown -R 1000:1000 ${PROVIDER_DIR} && \
 USER 1000
 # This is the command that was failing due to the corrupted JAR file
 RUN /opt/keycloak/bin/kc.sh build
-# -----------------------------------------------------------------------------
-# Stage 3: Runtime
-# -----------------------------------------------------------------------------
+
+# Stage 4: Runtime
 FROM quay.io/keycloak/keycloak:23.0
+# Overlay curl from ubi-micro-build
+COPY --from=ubi-micro-build /mnt/rootfs /
 COPY --from=builder /opt/keycloak/ /opt/keycloak/
 # WARNING: Use Docker Secrets or ARG/ENV substitution in production for sensitive values like admin passwords!
 # Set environment variables for HTTPS proxy support
@@ -58,10 +65,6 @@ ENV KC_HOSTNAME_STRICT_HTTPS=false
 ENV KC_HEALTH_ENABLED=true
 ENV KEYCLOAK_ADMIN=admin
 ENV KEYCLOAK_ADMIN_PASSWORD=admin123
-# Install curl-minimal for healthcheck (Requires root in UBI base)
-USER root
-RUN microdnf install -y curl-minimal && microdnf clean all
-USER 1000
 HEALTHCHECK --interval=30s --timeout=10s --start-period=120s --retries=10 \
     CMD curl -f http://localhost:8080/health/ready || exit 1
 ENTRYPOINT ["/opt/keycloak/bin/kc.sh"]
