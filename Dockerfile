@@ -1,9 +1,9 @@
 # Stage 1: Download the Socket Factory JAR and install curl for healthcheck
 FROM registry.access.redhat.com/ubi9-minimal AS ubi-downloader
 
-# Install curl and other needed tools for download
+# Update and install curl and coreutils, allowing erasure of conflicting minimal packages
 RUN microdnf update -y && \
-    microdnf install -y curl coreutils && \
+    microdnf install -y --allowerasing curl coreutils && \
     microdnf clean all
 
 # Download the JAR
