@@ -199,3 +199,4 @@ This custom Keycloak configuration is part of the BLNK infrastructure project.
 - [Keycloak Documentation](https://www.keycloak.org/documentation)
 - [Keycloak Proxy Configuration](https://www.keycloak.org/server/all-config)
 - [Cloud Run Configuration](https://cloud.google.com/run/docs)
+# Permissions updated for Cloud Run deployment
