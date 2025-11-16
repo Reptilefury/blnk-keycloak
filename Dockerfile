@@ -1,8 +1,8 @@
-# Stage 1: Build optimized Keycloak with Postgres and socket factory
-FROM quay.io/keycloak/keycloak:23.0 AS builder
+# Keycloak with proper HTTPS proxy support
+FROM quay.io/keycloak/keycloak:23.0
 
-# Set build-time env for Postgres
-ENV KC_DB=postgres
+# Set default environment variables for HTTPS proxy
+# These ensure Keycloak generates HTTPS URLs when behind a reverse proxy
 ENV KC_PROXY=edge \
     KC_HTTP_ENABLED=true \
     KC_HOSTNAME_STRICT=false \
@@ -10,27 +10,10 @@ ENV KC_PROXY=edge \
     KEYCLOAK_ADMIN=admin \
     KEYCLOAK_ADMIN_PASSWORD=admin123
 
-# Add Cloud SQL Postgres Socket Factory JAR as a provider
-RUN mkdir -p /opt/keycloak/providers
-ADD --chown=keycloak:keycloak https://repo1.maven.org/maven2/com/google/cloud/cloudsql-postgres-socket-factory/1.17.0/cloudsql-postgres-socket-factory-1.17.0.jar /opt/keycloak/providers/
-
-# Build optimized distribution
-RUN /opt/keycloak/bin/kc.sh build
-
-# Stage 2: Runtime image
-FROM quay.io/keycloak/keycloak:23.0
-
-# Copy built artifacts from builder
-COPY --from=builder /opt/keycloak/ /opt/keycloak/
-
-# Set runtime user
-USER 1000
-
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=120s --retries=3 \
     CMD curl -f http://localhost:8080/health/ready || exit 1
-    
-# Entry point for optimized start
-ENTRYPOINT ["/opt/keycloak/bin/kc.sh"]
 
+# Start Keycloak
+ENTRYPOINT ["/opt/keycloak/bin/kc.sh"]
 CMD ["start"]
