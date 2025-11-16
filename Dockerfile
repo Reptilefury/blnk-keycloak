@@ -1,8 +1,5 @@
 # Stage 1: Download Cloud SQL Socket Factory
 FROM registry.access.redhat.com/ubi9-minimal AS downloader
-# Install tools for download and integrity check (curl and sha1sum from coreutils)
-USER root
-RUN microdnf install -y curl coreutils && microdnf clean all
 # Define constants for file and checksum
 ENV JAR_NAME=cloudsql-postgres-socket-factory-1.17.0.jar \
     JAR_URL=https://repo1.maven.org/maven2/com/google/cloud/cloudsql-postgres-socket-factory/1.17.0/cloudsql-postgres-socket-factory-1.17.0.jar \
@@ -36,6 +33,7 @@ RUN set -e && \
 # -----------------------------------------------------------------------------
 FROM quay.io/keycloak/keycloak:23.0 AS builder
 ENV KC_DB=postgres
+ENV PROVIDER_DIR=/opt/keycloak/providers
 # Copy the verified JAR file
 COPY --from=downloader ${PROVIDER_DIR} ${PROVIDER_DIR}
 # FIX: Temporarily switch to root to perform chown, then switch back to the default Keycloak user (1000).
