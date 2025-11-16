@@ -1,7 +1,7 @@
 # Stage 1: Download Cloud SQL Socket Factory
 FROM registry.access.redhat.com/ubi9-minimal AS downloader
 
-# Install curl-minimal (required for the next step, minimal works in all arches)
+# Install curl-minimal (to avoid conflict on UBI minimal)
 RUN microdnf install -y curl-minimal && microdnf clean all
 
 RUN mkdir -p /opt/keycloak/providers && \
@@ -14,8 +14,13 @@ FROM quay.io/keycloak/keycloak:23.0 AS builder
 ENV KC_DB=postgres
 
 COPY --from=downloader /opt/keycloak/providers /opt/keycloak/providers
+
+# --- FIX: Switch to root to perform chown, then switch back to the Keycloak user ---
+USER root
 RUN chown -R 1000:1000 /opt/keycloak/providers && \
     touch -m --date=@1743465600 /opt/keycloak/providers/*
+USER 1000
+# ----------------------------------------------------------------------------------
 
 RUN /opt/keycloak/bin/kc.sh build
 
@@ -32,7 +37,7 @@ ENV KC_PROXY=edge \
     KEYCLOAK_ADMIN=admin \
     KEYCLOAK_ADMIN_PASSWORD=admin123
 
-# Install curl-minimal for healthcheck
+# Install curl-minimal for healthcheck (This part was already correct in the previous fix)
 USER root
 RUN microdnf install -y curl-minimal && microdnf clean all
 USER 1000
