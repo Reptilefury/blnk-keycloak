@@ -4,12 +4,16 @@ FROM quay.io/keycloak/keycloak:23.0
 # Set build-time env for Postgres
 ENV KC_DB=postgres
 
-# Add Cloud SQL Postgres Socket Factory JAR as a provider
-RUN mkdir -p /opt/keycloak/providers && \
+# Install curl and add Cloud SQL Postgres Socket Factory JAR as a provider
+RUN microdnf install -y curl && \
+    mkdir -p /opt/keycloak/providers && \
     curl -L -o /opt/keycloak/providers/cloudsql-postgres-socket-factory-1.17.0.jar \
-    https://repo1.maven.org/maven2/com/google/cloud/cloudsql-postgres-socket-factory/1.17.0/cloudsql-postgres-socket-factory-1.17.0.jar
+    https://repo1.maven.org/maven2/com/google/cloud/cloudsql-postgres-socket-factory/1.17.0/cloudsql-postgres-socket-factory-1.17.0.jar && \
+    chown 1000:1000 /opt/keycloak/providers/cloudsql-postgres-socket-factory-1.17.0.jar && \
+    touch -m --date=@1743465600 /opt/keycloak/providers/*  # Fix timestamp issue for optimized build && \
+    microdnf clean all
 
-# Build optimized distribution (runs as root during build)
+# Build optimized distribution
 RUN /opt/keycloak/bin/kc.sh build
 
 # Set default environment variables for HTTPS proxy and admin
