@@ -1,51 +1,35 @@
-# Stage 1: Download the Socket Factory JAR and install curl for healthcheck
-FROM registry.access.redhat.com/ubi9-minimal AS ubi-downloader
+# Stage 1: Download Cloud SQL Socket Factory JAR
+FROM registry.access.redhat.com/ubi9 AS downloader
 
-# Update and install curl and coreutils
-RUN microdnf update -y && \
-    microdnf install -y curl coreutils && \
-    microdnf clean all
+RUN microdnf update -y && microdnf clean all
 
-# Download the Cloud SQL Socket Factory JAR
 RUN mkdir -p /opt/keycloak/providers && \
     curl -L -o /opt/keycloak/providers/cloudsql-postgres-socket-factory-1.17.0.jar \
     https://repo1.maven.org/maven2/com/google/cloud/cloudsql-postgres-socket-factory/1.17.0/cloudsql-postgres-socket-factory-1.17.0.jar
 
-# Stage 2: Build ubi-micro with curl for overlay in final image
-FROM registry.access.redhat.com/ubi9:9.4 AS ubi-micro-build
-
-RUN mkdir -p /mnt/rootfs
-
-# Install minimal curl (libcurl-minimal to reduce size)
-RUN dnf install --installroot /mnt/rootfs --releasever 9 --setopt install_weak_deps=false --nodocs -y curl libcurl-minimal ca-certificates && \
-    dnf clean all --installroot /mnt/rootfs
-
-# Stage 3: Keycloak builder with optimizations
+# Stage 2: Keycloak builder with optimizations
 FROM quay.io/keycloak/keycloak:23.0 AS builder
 
-# Set build-time env for Postgres
+# Build-time env for Postgres
 ENV KC_DB=postgres
 
-# Copy the downloaded JAR from downloader
-COPY --from=ubi-downloader /opt/keycloak/providers /opt/keycloak/providers
+# Copy Cloud SQL Socket Factory
+COPY --from=downloader /opt/keycloak/providers /opt/keycloak/providers
 
-# Chown and fix timestamps
+# Fix permissions
 RUN chown -R 1000:1000 /opt/keycloak/providers && \
     touch -m --date=@1743465600 /opt/keycloak/providers/*
 
 # Build optimized Keycloak distribution
 RUN /opt/keycloak/bin/kc.sh build
 
-# Stage 4: Runtime image
+# Stage 3: Runtime image
 FROM quay.io/keycloak/keycloak:23.0
 
-# Overlay curl from ubi-micro-build
-COPY --from=ubi-micro-build /mnt/rootfs /
-
-# Copy built artifacts from builder
+# Copy optimized build and providers
 COPY --from=builder /opt/keycloak/ /opt/keycloak/
 
-# Set default environment variables for HTTPS proxy and admin
+# Default environment variables for HTTPS proxy and admin
 ENV KC_PROXY=edge \
     KC_HTTP_ENABLED=true \
     KC_HOSTNAME_STRICT=false \
@@ -54,8 +38,13 @@ ENV KC_PROXY=edge \
     KEYCLOAK_ADMIN=admin \
     KEYCLOAK_ADMIN_PASSWORD=admin123
 
-# Health check (curl now available)
-HEALTHCHECK --interval=30s --timeout=10s --start-period=120s --retries=3 \
+# Install curl (needed for healthcheck)
+USER root
+RUN microdnf install -y curl && microdnf clean all
+USER 1000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=120s --retries=10 \
     CMD curl -f http://localhost:8080/health/ready || exit 1
 
 # Start Keycloak in optimized mode
