@@ -1,9 +1,10 @@
 # Stage 1: Download the Socket Factory JAR and install curl for healthcheck
 FROM registry.access.redhat.com/ubi9-minimal AS ubi-downloader
 
-# Update and install curl and coreutils, allowing erasure of conflicting minimal packages
-RUN microdnf update -y && \
-    microdnf install -y --allowerasing curl coreutils && \
+# Remove conflicting minimal packages first, then update and install full curl and coreutils
+RUN microdnf remove -y curl-minimal coreutils-single && \
+    microdnf update -y && \
+    microdnf install -y curl coreutils && \
     microdnf clean all
 
 # Download the JAR
@@ -16,8 +17,8 @@ FROM registry.access.redhat.com/ubi9:9.4 AS ubi-micro-build
 
 RUN mkdir -p /mnt/rootfs
 
-# Install minimal curl (libcurl-minimal to reduce size)
-RUN dnf install --installroot /mnt/rootfs --releasever 9 --setopt install_weak_deps=false --nodocs -y curl libcurl-minimal ca-certificates && \
+# Install minimal curl (libcurl-minimal to reduce size), allowing erasure if needed
+RUN dnf install --installroot /mnt/rootfs --releasever 9 --setopt install_weak_deps=false --nodocs -y --allowerasing curl libcurl-minimal ca-certificates && \
     dnf clean all --installroot /mnt/rootfs
 
 # Stage 3: Keycloak builder with optimizations
