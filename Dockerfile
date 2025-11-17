@@ -1,11 +1,10 @@
 # Multi-stage build to download Cloud SQL Socket Factory
-FROM registry.access.redhat.com/ubi9-minimal as jar-downloader
+FROM alpine:latest as jar-downloader
 
-RUN microdnf install -y curl && \
+RUN apk add --no-cache curl && \
     mkdir -p /tmp/jars && \
     curl -L -o /tmp/jars/postgres-socket-factory.jar \
-    https://repo1.maven.org/maven2/com/google/cloud/sql/postgres-socket-factory/1.27.0/postgres-socket-factory-1.27.0.jar && \
-    microdnf clean all
+    https://repo1.maven.org/maven2/com/google/cloud/sql/postgres-socket-factory/1.27.0/postgres-socket-factory-1.27.0.jar
 
 # Keycloak image with HTTPS reverse proxy support and Cloud SQL integration
 FROM quay.io/keycloak/keycloak:25.0.1
