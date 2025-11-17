@@ -1,5 +1,13 @@
+# Multi-stage build to download Cloud SQL Socket Factory
+FROM curlimages/curl:latest as downloader
+RUN curl -L -o /tmp/cloud-sql-postgres-socket-factory.jar \
+    https://repo1.maven.org/maven2/com/google/cloud/sql/cloud-sql-postgres-socket-factory/1.14.4/cloud-sql-postgres-socket-factory-1.14.4.jar
+
 # Keycloak image with HTTPS reverse proxy support and Cloud SQL integration
 FROM quay.io/keycloak/keycloak:23.0
+
+# Copy Cloud SQL Socket Factory JAR from downloader
+COPY --from=downloader /tmp/cloud-sql-postgres-socket-factory.jar /opt/keycloak/lib/quarkus/
 
 # Set environment variables for reverse proxy and database support
 ENV KC_PROXY=edge
