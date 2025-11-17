@@ -5,8 +5,6 @@ FROM quay.io/keycloak/keycloak:25.0.1
 # Note: KC_DB_URL will be set at runtime via Cloud Run environment variables
 ENV KC_PROXY=edge
 ENV KC_HTTP_ENABLED=true
-ENV KC_HOSTNAME=136.111.45.49
-ENV KC_HOSTNAME_PORT=19080
 ENV KC_HOSTNAME_STRICT=false
 ENV KC_HOSTNAME_STRICT_HTTPS=false
 ENV KC_HEALTH_ENABLED=true
