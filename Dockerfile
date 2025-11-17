@@ -1,21 +1,8 @@
-# Multi-stage build to download Cloud SQL Socket Factory
-FROM alpine:latest as jar-downloader
-
-RUN apk add --no-cache curl && \
-    mkdir -p /tmp/jars && \
-    curl -L -o /tmp/jars/postgres-socket-factory.jar \
-    https://repo1.maven.org/maven2/com/google/cloud/sql/postgres-socket-factory/1.27.0/postgres-socket-factory-1.27.0.jar
-
-# Keycloak image with HTTPS reverse proxy support and Cloud SQL integration
+# Keycloak image with HTTPS reverse proxy support and Supabase PostgreSQL integration
 FROM quay.io/keycloak/keycloak:25.0.1
 
-# Copy Cloud SQL Socket Factory JAR to providers directory
-COPY --from=jar-downloader /tmp/jars/postgres-socket-factory.jar /opt/keycloak/providers/
-
-# Build Keycloak with providers
-RUN /opt/keycloak/bin/kc.sh build
-
 # Set environment variables for reverse proxy and database support
+# Note: KC_DB_URL will be set at runtime via Cloud Run environment variables
 ENV KC_PROXY=edge
 ENV KC_HTTP_ENABLED=true
 ENV KC_HOSTNAME_STRICT=false
