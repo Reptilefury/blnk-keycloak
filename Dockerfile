@@ -1,18 +1,5 @@
 # Keycloak image with HTTPS reverse proxy support and Cloud SQL integration
-# Use ubi8/ubi:latest as a builder to download the Cloud SQL Socket Factory JAR
-FROM registry.access.redhat.com/ubi8/ubi:latest as jar-builder
-
-RUN yum install -y curl && \
-    mkdir -p /tmp/jars && \
-    curl -L -o /tmp/jars/cloud-sql-postgres-socket-factory.jar \
-    https://repo1.maven.org/maven2/com/google/cloud/sql/cloud-sql-postgres-socket-factory/1.14.4/cloud-sql-postgres-socket-factory-1.14.4.jar && \
-    yum clean all
-
-# Start with Keycloak base image
 FROM quay.io/keycloak/keycloak:23.0
-
-# Copy the Cloud SQL Socket Factory JAR from builder
-COPY --from=jar-builder /tmp/jars/cloud-sql-postgres-socket-factory.jar /opt/keycloak/lib/quarkus/
 
 # Set environment variables for reverse proxy and database support
 ENV KC_PROXY=edge
