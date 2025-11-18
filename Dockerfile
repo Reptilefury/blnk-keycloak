@@ -10,8 +10,8 @@ ENV KC_HOSTNAME_STRICT_HTTPS=false
 ENV KC_HEALTH_ENABLED=true
 ENV KC_DB=postgres
 ENV KC_CACHE=local
-ENV KEYCLOAK_ADMIN=admin
-ENV KEYCLOAK_ADMIN_PASSWORD=admin123
+ENV KEYCLOAK_ADMIN=reptilefury
+ENV KEYCLOAK_ADMIN_PASSWORD=10325Fil
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=120s --retries=10 \
