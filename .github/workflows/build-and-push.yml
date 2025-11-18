@@ -82,7 +82,7 @@ jobs:
             --region us-central1 \
             --memory=2Gi --cpu=2 \
             --set-cloudsql-instances=heroic-equinox-474616-i5:us-central1:blnk-postgres \
-            --set-env-vars="KC_DB=postgres,KC_DB_URL=jdbc:postgresql://db.voxxzckailavdegfrgqm.supabase.co:5432/postgres,KC_DB_USERNAME=postgres,KC_DB_PASSWORD=10325Fil,KC_DB_DATABASE=postgres,KC_HOSTNAME_STRICT=false" \
+            --set-env-vars="KC_DB=postgres,KC_DB_URL=${{ secrets.KC_DB_URL }},KC_DB_USERNAME=${{ secrets.KC_DB_USERNAME }},KC_DB_PASSWORD=${{ secrets.KC_DB_PASSWORD }},KC_DB_DATABASE=postgres,KC_HOSTNAME_STRICT=false,KEYCLOAK_ADMIN=${{ secrets.KEYCLOAK_ADMIN }},KEYCLOAK_ADMIN_PASSWORD=${{ secrets.KEYCLOAK_ADMIN_PASSWORD }}" \
             --ingress=all \
             --allow-unauthenticated
 
