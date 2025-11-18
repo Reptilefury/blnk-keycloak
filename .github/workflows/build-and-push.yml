@@ -77,6 +77,10 @@ jobs:
       - name: Deploy to Cloud Run
         if: github.event_name != 'pull_request'
         run: |
+          # Create realm configs with secrets substituted
+          envsubst < realm-configs/opm-admin-realm.template.json > realm-configs/opm-admin-realm.json
+          envsubst < realm-configs/opm-client-realm.template.json > realm-configs/opm-client-realm.json
+          
           gcloud run deploy keycloak \
             --image us-central1-docker.pkg.dev/heroic-equinox-474616-i5/keycloak-repo/keycloak:main \
             --region us-central1 \
@@ -85,6 +89,11 @@ jobs:
             --set-env-vars="KC_DB=postgres,KC_DB_URL=${{ secrets.KC_DB_URL }},KC_DB_USERNAME=${{ secrets.KC_DB_USERNAME }},KC_DB_PASSWORD=${{ secrets.KC_DB_PASSWORD }},KC_DB_DATABASE=postgres,KC_HOSTNAME_STRICT=false,KEYCLOAK_ADMIN=${{ secrets.KEYCLOAK_ADMIN }},KEYCLOAK_ADMIN_PASSWORD=${{ secrets.KEYCLOAK_ADMIN_PASSWORD }}" \
             --ingress=all \
             --allow-unauthenticated
+        env:
+          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+          ADMIN_BACKEND_SECRET: ${{ secrets.ADMIN_BACKEND_SECRET }}
 
       - name: Image built and pushed successfully
         if: github.event_name != 'pull_request'
